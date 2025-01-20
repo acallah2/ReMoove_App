@@ -1,13 +1,14 @@
 {
   "expo": {
-    "name": "ReMoove_App",
-    "slug": "ReMoove_App",
+    "name": "ReMoove",
+    "slug": "ReMoove",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "remoove",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "entryPoint": "node_modules/expo-router/entry",
     "ios": {
       "supportsTablet": true
     },
