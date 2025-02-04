@@ -1,18 +1,33 @@
-import { StatusBar } from 'expo-status-bar';
-import { Text, View } from 'react-native';
-import { Link } from "expo-router";
+import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 import "../global.css";
 
-export default function App() {
+export default function TabLayout() {
   return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <Text className="text-5xl">ReMoove!</Text>
-      <StatusBar style="auto" />
-      <Link href="/profile" style={{color: 'blue'}}>Go to Profile</Link>
-      <Link href="/home" style={{color: 'blue'}}>Go to Home</Link>
-      <Link href="/trashcanlist" style={{color: 'blue'}}>Go to List of Trash Cans</Link>
-    </View>
+    <Tabs
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap = "home-outline";
+
+          if (route.name === "(home)") {
+            iconName = focused ? "home" : "home-outline";
+          } else if (route.name === "(alerts)") {
+            iconName = focused ? "notifications" : "notifications-outline";
+          } else if (route.name === "(settings)") {
+            iconName = focused ? "settings" : "settings-outline";
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: "blue",
+        tabBarInactiveTintColor: "gray",
+        headerShown: false,
+      })}
+    >
+      <Tabs.Screen name="(home)" options={{ title: "Home" }} />
+      <Tabs.Screen name="(alerts)" options={{ title: "Alerts" }} />
+      <Tabs.Screen name="(settings)" options={{ title: "Settings" }} />
+    </Tabs>
   );
 }
-

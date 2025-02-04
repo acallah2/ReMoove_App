@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, FlatList, Text, View, TextInput, Modal, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Card from '../components/Card'; // Adjust the path if necessary
 
 interface CardData {
   id: string;
