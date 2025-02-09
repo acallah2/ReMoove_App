@@ -1,6 +1,7 @@
+// home.tsx
 import React, { useState } from "react";
 import { SafeAreaView, ScrollView, Button } from "react-native";
-import Card from "../components/Card";
+import Card from "../../../../components/Card";
 
 const Home = () => {
   // State for dynamically managing cards
@@ -31,7 +32,7 @@ const Home = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
+    <SafeAreaView className="flex-1 bg-white">
       <ScrollView className="px-4 py-4">
         {/* Render all cards */}
         {cards.map((card) => (
@@ -40,12 +41,11 @@ const Home = () => {
             image={card.image}
             title={card.title}
             description={card.description}
-            link={`/${card.id}`} // Pass the dynamic link
+            link={`/home/${card.id}`} // Pass the dynamic link
           />
         ))}
       </ScrollView>
-      {/* Button to add a new card */}
-      <Button title="Add Card" onPress={addCard} />
+      <Button title="Add Card" onPress={addCard} color="#033266" />
     </SafeAreaView>
   );
 };

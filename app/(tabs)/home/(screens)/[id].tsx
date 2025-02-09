@@ -1,5 +1,9 @@
 import { useLocalSearchParams } from "expo-router";
 import { SafeAreaView, Text } from "react-native";
+import React from "react";
+
+export const unstable_settings = { group: true };
+
 
 export default function CardDetails() {
   const params = useLocalSearchParams();

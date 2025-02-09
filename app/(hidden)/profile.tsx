@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text } from 'react-native';
+import { Button, SafeAreaView, Text } from 'react-native';
 import axios from 'axios';
-import Button from '../components/Button';
+//import Button from '../components/Button';
 
 const profile = () => {
   const [data, setData] = useState<{ message: string; number: number } | null>(null); // State to store API response

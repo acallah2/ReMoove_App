@@ -7,7 +7,6 @@ const Settings = () => {
 
     return (
       <SafeAreaView>
-              <Link href="/logdata" style={{color: 'blue'}}>Go to List of Trash Cans</Link>
       </SafeAreaView>
 
     );

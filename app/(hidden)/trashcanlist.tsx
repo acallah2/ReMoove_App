@@ -1,3 +1,4 @@
+// trashcanlist.tsx
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, FlatList, Text, View, TextInput, Modal, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -73,9 +74,9 @@ const TrashcanList: React.FC = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
+    <SafeAreaView className="flex-1 bg-white">
       <TouchableOpacity
-        className="bg-blue-500 p-3 rounded-lg mx-4 mt-4"
+        className="bg-ucd-blue-90 p-3 rounded-lg mx-4 mt-4"
         onPress={() => setModalVisible(true)}
       >
         <Text className="text-white text-center font-bold text-lg">Add New Card</Text>
@@ -86,19 +87,19 @@ const TrashcanList: React.FC = () => {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
-            onPress={() => alert(`Card: ${item.title}`)} // Regular press
-            onLongPress={() => confirmDelete(item.id)} // Long press to delete
-            delayLongPress={500} // Optional: Set delay for long press (500ms)
+            onPress={() => alert(`Card: ${item.title}`)}
+            onLongPress={() => confirmDelete(item.id)}
+            delayLongPress={500}
             className="bg-white rounded-lg shadow-lg p-4 m-2"
           >
             <View>
-              <Text className="text-xl font-bold text-gray-900">{item.title}</Text>
-              <Text className="text-sm text-gray-600 mt-2">{item.description}</Text>
+              <Text className="text-xl font-bold text-ucd-blue">{item.title}</Text>
+              <Text className="text-sm text-ucd-gray-dark mt-2">{item.description}</Text>
             </View>
           </TouchableOpacity>
         )}
         ListEmptyComponent={
-          <Text className="text-gray-500 text-center mt-4">No cards yet. Add one!</Text>
+          <Text className="text-ucd-gray-dark text-center mt-4">No cards yet. Add one!</Text>
         }
       />
 
@@ -110,17 +111,17 @@ const TrashcanList: React.FC = () => {
       >
         <View className="flex-1 justify-center items-center bg-black/50">
           <View className="w-4/5 bg-white p-6 rounded-lg shadow-lg">
-            <Text className="text-lg font-bold mb-4 text-gray-800">Create New Card</Text>
+            <Text className="text-lg font-bold mb-4 text-ucd-blue">Create New Card</Text>
 
             <TextInput
-              className="border border-gray-300 rounded-lg p-3 mb-3"
+              className="border border-ucd-blue-10 rounded-lg p-3 mb-3"
               placeholder="Enter card title"
               value={newCardTitle}
               onChangeText={setNewCardTitle}
             />
 
             <TextInput
-              className="border border-gray-300 rounded-lg p-3 mb-4"
+              className="border border-ucd-blue-10 rounded-lg p-3 mb-4"
               placeholder="Enter card description"
               value={newCardDescription}
               onChangeText={setNewCardDescription}
@@ -128,14 +129,14 @@ const TrashcanList: React.FC = () => {
 
             <View className="flex-row justify-between">
               <TouchableOpacity
-                className="bg-red-500 flex-1 mr-2 p-3 rounded-lg"
+                className="bg-ucd-blue-10 flex-1 mr-2 p-3 rounded-lg"
                 onPress={() => setModalVisible(false)}
               >
-                <Text className="text-white text-center font-bold">Cancel</Text>
+                <Text className="text-ucd-blue text-center font-bold">Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                className="bg-blue-500 flex-1 ml-2 p-3 rounded-lg"
+                className="bg-ucd-blue flex-1 ml-2 p-3 rounded-lg"
                 onPress={addCard}
               >
                 <Text className="text-white text-center font-bold">Add Card</Text>
