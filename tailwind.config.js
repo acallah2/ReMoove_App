@@ -23,7 +23,10 @@ module.exports = {
         'ucd-gray-dark': '#4C4C4C',   // Dark Gray
         'ucd-gray-light': '#E5E5E5',  // Light Gray
         'gunrock': '0047BA', // Gunrock blue
-        'bodega': '#003A5D'
+        'bodega': '#003A5D', // Bodega blue
+        'doubledecker': '#C10230', // Double Decker Red
+        'redwood': '#266041', // Redwood Green
+        
       },
     },
   },
