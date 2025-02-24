@@ -1,7 +1,11 @@
 // app/(tabs)/_layout.tsx
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import "../../global.css"; // adjust if needed
+import "../../global.css";
+import { LogBox } from "react-native";
+
+// Disable or customize Reanimated logs here:
+LogBox.ignoreLogs([" [Reanimated] Reading from `value` during component render. Please ensure that you do not access the `value` property or use `get` method of a shared value while React is rendering a component.",]); // Ignore specific log warnings
 
 export default function TabsLayout() {
   return (
@@ -18,12 +22,11 @@ export default function TabsLayout() {
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: "#033266", // UC Davis Blue
-        tabBarInactiveTintColor: "#4C4C4C", // Dark Gray
+        tabBarActiveTintColor: "#033266",
+        tabBarInactiveTintColor: "#4C4C4C",
         headerShown: false,
       })}
     >
-      {/* Use only the parent folder names */}
       <Tabs.Screen name="home" options={{ title: "Home" }} />
       <Tabs.Screen name="alerts" options={{ title: "Alerts" }} />
       <Tabs.Screen name="settings" options={{ title: "Settings" }} />

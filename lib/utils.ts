@@ -2,11 +2,17 @@ import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 /**
- * A utility function to conditionally join class names using clsx and merge Tailwind classes properly.
- *
- * @param inputs - A list of class names, boolean conditions, or undefined values.
- * @returns A single merged string of valid class names.
+ * Do not read the `.value` property; if the input is a reanimated shared value,
+ * we return an empty string.
  */
-export function cn(...inputs: (string | undefined | null | boolean)[]) {
-  return twMerge(clsx(inputs));
+function resolveValue(input: any) {
+  if (input && typeof input === "object" && Object.prototype.hasOwnProperty.call(input, "value")) {
+    return "";
+  }
+  return input;
+}
+
+export function cn(...inputs: (string | undefined | null | boolean | { value: string })[]) {
+  const resolvedInputs = inputs.map(resolveValue);
+  return twMerge(clsx(resolvedInputs));
 }

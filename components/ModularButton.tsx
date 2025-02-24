@@ -20,10 +20,10 @@ export function Button({
     <TouchableOpacity
       onPress={onPress}
       className={cn(
-        "px-4 py-2 rounded-lg transition-all",
-        variant === "primary" && "bg-ucd-blue-90 active:bg-ucd-blue",
-        variant === "secondary" && "bg-gray-300 active:bg-gray-400",
-        variant === "danger" && "bg-doubledecker active:bg-doubledecker",
+        "px-4 py-2 rounded-xl transition-all",
+        variant === "primary" && "bg-ucd-blue-90",
+        variant === "secondary" && "bg-gray-300",
+        variant === "danger" && "bg-doubledecker",
         className
       )}
     >
