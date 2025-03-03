@@ -1,11 +1,18 @@
-// app/(tabs)/_layout.tsx
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { LogBox, View, Text } from "react-native";
 import "../../global.css";
-import { LogBox } from "react-native";
 
 // Disable or customize Reanimated logs here:
-LogBox.ignoreLogs([" [Reanimated] Reading from `value` during component render. Please ensure that you do not access the `value` property or use `get` method of a shared value while React is rendering a component.",]); // Ignore specific log warnings
+LogBox.ignoreLogs([
+  " [Reanimated] Reading from `value` during component render. Please ensure that you do not access the `value` property or use `get` method of a shared value while React is rendering a component.",
+]); // Ignore specific log warnings
+
+const LogoHeader = () => (
+  <View className="flex-row items-center justify-center py-1">
+    <Text className="text-3xl font-bold">ReMoove</Text>
+  </View>
+);
 
 export default function TabsLayout() {
   return (
@@ -16,7 +23,9 @@ export default function TabsLayout() {
           if (route.name === "home") {
             iconName = focused ? "home" : "home-outline";
           } else if (route.name === "alerts") {
-            iconName = focused ? "notifications" : "notifications-outline";
+            iconName = focused
+              ? "notifications"
+              : "notifications-outline";
           } else if (route.name === "settings") {
             iconName = focused ? "settings" : "settings-outline";
           }
@@ -24,7 +33,9 @@ export default function TabsLayout() {
         },
         tabBarActiveTintColor: "#033266",
         tabBarInactiveTintColor: "#4C4C4C",
-        headerShown: false,
+        headerShown: true,
+        headerTitle: () => <LogoHeader />,
+        headerTitleAlign: "center",
       })}
     >
       <Tabs.Screen name="home" options={{ title: "Home" }} />

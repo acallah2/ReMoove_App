@@ -100,16 +100,17 @@ const Home = () => {
       if (!Array.isArray(data)) {
         throw new Error("Expected an array but got: " + JSON.stringify(data));
       }
-      // Map each entry to include default fields.
-      const list = data.map((entry: any, index: number) => ({
-        id: entry.id !== undefined ? entry.id : index + 1,
-        image: entry.image || defaultImage,
-        // These will be updated by the status fetch.
-        status: "Pending",
-        fillLevels: { Containers: 0, Organics: 0, Landfill: 0, Paper: 0 },
-        lastUpdated: "Loading...",
-        location: entry.location || "Unknown Location",
-      }));
+      // Map each entry to include default fields and then sort by trashCanId
+      const list = data
+        .map((entry: any, index: number) => ({
+          id: entry.trashCanId !== undefined ? entry.trashCanId : index + 1,
+          image: entry.image || defaultImage,
+          status: "Pending",
+          fillLevels: { Containers: 0, Organics: 0, Landfill: 0, Paper: 0 },
+          lastUpdated: "Loading...",
+          location: entry.location || "Unknown Location",
+        }))
+        .sort((a, b) => Number(a.id) - Number(b.id));
       setTrashcans(list);
       storeTrashcans(list);
       return list;
@@ -134,10 +135,15 @@ const Home = () => {
               typeof responseData.body === "string"
                 ? JSON.parse(responseData.body)
                 : responseData;
-            // Default to zero values if fillLevels is missing.
+            // Ensure default fillLevels if missing.
             const updatedFillLevels =
               dataObject.fillLevels || { Containers: 0, Organics: 0, Landfill: 0, Paper: 0 };
             const computedStatus = computeStatus(updatedFillLevels);
+            // Check if there's any change in status or fillLevels.
+            const hasChanged =
+              computedStatus !== trashcan.status ||
+              JSON.stringify(updatedFillLevels) !== JSON.stringify(trashcan.fillLevels);
+            
             setTrashcans((prev) =>
               prev.map((tc) =>
                 tc.id === trashcan.id
@@ -145,7 +151,8 @@ const Home = () => {
                       ...tc,
                       fillLevels: updatedFillLevels,
                       status: computedStatus,
-                      lastUpdated: dataObject.lastUpdated || "Just now",
+                      // Only update lastUpdated if something has changed.
+                      lastUpdated: hasChanged ? (dataObject.lastUpdated || "Just now") : tc.lastUpdated,
                     }
                   : tc
               )
