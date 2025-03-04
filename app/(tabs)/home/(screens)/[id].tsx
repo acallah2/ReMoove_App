@@ -14,7 +14,59 @@ import { CardContent } from "../../../../components/Cards/CardContent";
 import { Button } from "../../../../components/ModularButton";
 import { Progress } from "../../../../components/Progress";
 import { LineChart } from "react-native-chart-kit";
-import { sendManualControl, connectTrashCan, fetchTrashCanStatus } from "../../../utils/api";
+import { sendManualControl, connectTrashCan, fetchTrashCanStatus, fetchChartData } from "../../../utils/api";
+import { Picker } from '@react-native-picker/picker';
+import { StyleSheet } from 'react-native';
+
+// First, update the helper function at the top of the file
+const validateChartData = (timeData: any, selectedType: string): number[] => {
+  if (!timeData || typeof timeData !== 'object') {
+    console.log("Invalid time data received:", timeData);
+    return [0];
+  }
+
+  // If we're looking for total, sum up all categories
+  if (selectedType === 'Total') {
+    // Get the first category's array length to determine how many data points we need
+    const firstCategory = Object.values(timeData)[0] as number[];
+    const dataLength = Array.isArray(firstCategory) ? firstCategory.length : 0;
+    
+    // Create an array of zeros with the correct length
+    const totals = new Array(dataLength).fill(0);
+    
+    // Sum up values from each category
+    Object.values(timeData).forEach((categoryData: any) => {
+      if (Array.isArray(categoryData)) {
+        categoryData.forEach((value: number, index: number) => {
+          totals[index] += Number(value) || 0;
+        });
+      }
+    });
+    
+    return totals;
+  }
+
+  // For specific categories, return that category's data or zeros
+  return Array.isArray(timeData[selectedType]) ? 
+    timeData[selectedType].map((n: any) => Number(n) || 0) : 
+    [0];
+};
+
+// Add this helper function at the top of your file
+const getDayLabels = (dataPoints: number): string[] => {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const today = new Date();
+  const labels: string[] = ['Today'];
+  
+  // Add the next 6 days after today
+  for (let i = 1; i < dataPoints; i++) {
+    const date = new Date();
+    date.setDate(today.getDate() + i);
+    labels.push(days[date.getDay()]);
+  }
+  
+  return labels;
+};
 
 export default function TrashCanPage() {
   const { id } = useLocalSearchParams();
@@ -42,18 +94,19 @@ export default function TrashCanPage() {
     labels: string[];
     datasets: Array<{ data: number[] }>;
   }>({
-    labels: ['0m', '10m', '20m', '30m', '40m', '50m'],
-    datasets: [{ data: [0, 0, 0, 0, 0, 0] }],
+    labels: ['0m', '10m', '20m', '30m', '40m', '50m'],  // Default 1h view
+    datasets: [{ 
+      data: [0, 0, 0, 0, 0, 0].map(n => Number(n) || 0)  // Ensure numbers
+    }]
   });
+
+  const [rawChartData, setRawChartData] = useState<any>(null);
 
   const [selectedWaste, setSelectedWaste] = useState<'Total' | 'Containers' | 'Organics' | 'Landfill' | 'Paper'>('Total');
 
-  const data = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-    datasets: [{ data: [5, 8, 6, 7, 9] }],
-  };
-
   const screenWidth = Dimensions.get("window").width;
+
+  const [ws, setWs] = useState<WebSocket | null>(null);
 
   // Fetch initial status from the REST endpoint.
   useEffect(() => {
@@ -82,7 +135,8 @@ export default function TrashCanPage() {
   // Connect to the WebSocket API for live updates.
   useEffect(() => {
     if (!trashCanId) return;
-    const ws = connectTrashCan(trashCanId, (newData) => {
+    
+    const websocket = connectTrashCan(trashCanId, (newData) => {
       const hasChanged =
         newData.sortingStatus !== status.sortingStatus ||
         newData.trapStatus !== status.trapStatus ||
@@ -99,7 +153,9 @@ export default function TrashCanPage() {
         setLastUpdatedDisplay("Just Updated");
       }
     });
-    return () => ws.close();
+
+    setWs(websocket);
+    return () => websocket.close();
   }, [trashCanId]);
 
   // Update "Last Updated" display periodically.
@@ -120,58 +176,117 @@ export default function TrashCanPage() {
     return () => clearInterval(interval);
   }, [status.lastUpdated]);
 
-  // Update the updateChartData function to handle different waste types
-  const updateChartData = (range: '1h' | '8h' | '24h' | '7d') => {
-    let labels: string[] = [];
+  // Then replace the chart data fetching useEffect
+  useEffect(() => {
+    if (!trashCanId) return;
     
-    switch (range) {
-      case '1h':
-        labels = ['10m', '20m', '30m', '40m', '50m', '60m'];
-        break;
-      case '8h':
-        labels = ['1h', '2h', '3h', '4h', '5h', '6h', '7h', '8h'];
-        break;
-      case '24h':
-        labels = ['3h', '6h', '9h', '12h', '15h', '18h', '21h', '24h'];
-        break;
-      case '7d':
-        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        break;
-    }
+    const fetchData = async () => {
+      try {
+        const chartResponse = await fetchChartData(trashCanId);
+        console.log("Raw chart response:", chartResponse); // Debug log
+        
+        const parsedData = chartResponse.body ? JSON.parse(chartResponse.body) : chartResponse;
+        console.log("Parsed chart data:", parsedData); // Debug log
+        
+        setRawChartData(parsedData);
+        
+        const timeData = parsedData?.[timeRange];
+        console.log("Time range data:", timeData); // Debug log
+
+        if (!timeData || Object.keys(timeData).length === 0) {
+          console.log("No data available for time range:", timeRange);
+          setChartData({
+            labels: ['No Data'],
+            datasets: [{ data: [0] }]
+          });
+          return;
+        }
+
+        // Generate labels based on timeRange
+        let labels: string[];
+        const dataPoints = timeData[Object.keys(timeData)[0]]?.length || 0;
+        
+        switch (timeRange) {
+          case '1h':
+            labels = Array.from({length: dataPoints}, (_, i) => `${i*10}m`);
+            break;
+          case '8h':
+            labels = Array.from({length: dataPoints}, (_, i) => `${i+1}h`);
+            break;
+          case '24h':
+            labels = Array.from({length: dataPoints}, (_, i) => `${i*3}h`);
+            break;
+          case '7d':
+            labels = getDayLabels(dataPoints);
+            break;
+          default:
+            labels = ['No Data'];
+        }
+
+        // Process and validate the data
+        const validatedData = validateChartData(timeData, selectedWaste);
+        console.log("Validated data:", validatedData); // Debug log
+
+        setChartData({
+          labels: labels.slice(0, validatedData.length),
+          datasets: [{
+            data: validatedData
+          }]
+        });
+      } catch (error) {
+        console.error("Error updating chart data:", error);
+        setChartData({
+          labels: ['Error'],
+          datasets: [{ data: [0] }]
+        });
+      }
+    };
   
-    // Generate category-specific dummy data
-    let data: number[];
-    switch (selectedWaste) {
-      case 'Containers':
-        data = labels.map(() => Math.floor(Math.random() * 20)); // 0-20 items
-        break;
-      case 'Organics':
-        data = labels.map(() => Math.floor(Math.random() * 30)); // 0-30 items
-        break;
-      case 'Landfill':
-        data = labels.map(() => Math.floor(Math.random() * 25)); // 0-25 items
-        break;
-      case 'Paper':
-        data = labels.map(() => Math.floor(Math.random() * 15)); // 0-15 items
-        break;
-      case 'Total':
-      default:
-        data = labels.map(() => Math.floor(Math.random() * 80)); // 0-80 items for total
-        break;
-    }
-  
-    setChartData({
-      labels,
-      datasets: [{
-        data
-      }]
+    fetchData();
+    const interval = setInterval(fetchData, 60000); // Refresh every minute
+    return () => clearInterval(interval);
+  }, [trashCanId, timeRange, selectedWaste]);
+
+  // Function to empty the trash bin by setting all fill levels to 0.
+  const emptyTrashBin = () => {
+    const emptyLevels = {
+      Containers: 0,
+      Organics: 0,
+      Landfill: 0,
+      Paper: 0,
+    };
+    sendManualControl({
+      trashCanId,
+      fillLevels: emptyLevels,
+      sortingStatus: status.sortingStatus || "Idle",
+      trapStatus: status.trapStatus || "Closed",
+      lastUpdated: "Just now",
     });
   };
 
-  // Update the useEffect to respond to both timeRange and selectedWaste changes
-  useEffect(() => {
-    updateChartData(timeRange);
-  }, [timeRange, selectedWaste]);
+  // Add this helper function above your return statement, along with your other functions:
+const emptyCategory = (category: keyof typeof status.fillLevels) => {
+  // Create a copy of current fill levels and set the specified category to 0
+  const updatedFillLevels = {
+    ...status.fillLevels,
+    [category]: 0
+  };
+
+  // Create WebSocket message with complete status update
+  const message = {
+    action: "updateStatus",
+    trashCanId: trashCanId,
+    fillLevels: updatedFillLevels,
+    sortingStatus: status.sortingStatus || "Idle",
+    trapStatus: status.trapStatus || "Closed",
+    lastUpdated: "Just now"
+  };
+
+  // Send the message through WebSocket
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(message));
+  }
+};
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
@@ -208,7 +323,9 @@ export default function TrashCanPage() {
           {/* Fill Level */}
           <ModularCard className="mb-4">
             <CardContent>
-              <Text className="text-lg font-semibold">Fill Level</Text>
+              <View className="border-b border-gray-200 pb-4">
+                <Text className="text-lg font-semibold">Fill Level</Text>
+              </View>
               {(["Containers", "Organics", "Landfill", "Paper"] as Array<keyof typeof status.fillLevels>).map(
                 (category, index) => {
                   const fill = status.fillLevels[category] || 0;
@@ -223,13 +340,29 @@ export default function TrashCanPage() {
                   );
                 }
               )}
+              {/* Empty Category Buttons */}
+              <View className="flex-col mt-4">
+                {(["Containers", "Organics", "Landfill", "Paper"] as Array<keyof typeof status.fillLevels>).map(
+                  (category, index) => (
+                    <Button
+                      key={index}
+                      onPress={() => emptyCategory(category)}
+                      className="w-full mb-2"
+                    >
+                      {`Empty ${category}`}
+                    </Button>
+                  )
+                )}
+              </View>
             </CardContent>
           </ModularCard>
 
           {/* Manual Controls */}
           <ModularCard className="mb-4">
             <CardContent>
-              <Text className="text-lg font-semibold">Manual Controls</Text>
+              <View className="border-b border-gray-200 pb-4 mb-6">
+                <Text className="text-lg font-semibold">Manual Controls</Text>
+              </View>
               {/* First Row */}
               <View className="flex-row justify-between mt-2">
                 <Button onPress={() => sendManualControl({ forceSort: true })} className="w-[48%]">
@@ -269,26 +402,52 @@ export default function TrashCanPage() {
           {/* Usage Trends */}
           <ModularCard className="mb-4">
             <CardContent>
-              <View className="flex-row justify-between items-center mb-4">
-                <Text className="text-lg font-semibold">Sorting Efficiency</Text>
-                <View className="flex-row space-x-1">
-                  {(['1h', '8h', '24h', '7d'] as const).map((range) => (
-                    <Button
-                      key={range}
-                      onPress={() => setTimeRange(range)}
-                      className={`px-2 py-1 w-[45px] ${
-                        timeRange === range ? 'bg-ucd-gold' : 'bg-gray-200'
-                      }`}
-                    >
-                      {range.toUpperCase()}
-                    </Button>
-                  ))}
-                </View>
+              <View className="border-b border-gray-200 pb-4 mb-6">
+                <Text className="text-lg font-semibold">Sorting History</Text>
               </View>
+              
+              <View className="flex-row justify-center mb-6">
+  <View className="flex-1 max-w-[140px] bg-gray-100 rounded-lg shadow-sm">
+    <Picker
+      selectedValue={timeRange}
+      onValueChange={(value) => setTimeRange(value)}
+      className="h-10 px-2"
+      style={{ color: "#000" }}
+    >
+      <Picker.Item label="1H" value="1h" />
+      <Picker.Item label="8H" value="8h" />
+      <Picker.Item label="24H" value="24h" />
+      <Picker.Item label="7D" value="7d" />
+    </Picker>
+  </View>
+  
+  {/* Spacer */}
+  <View className="w-4" />
+  
+  <View className="flex-1 max-w-[140px] bg-gray-100 rounded-lg shadow-sm">
+    <Picker
+      selectedValue={selectedWaste}
+      onValueChange={(value) => setSelectedWaste(value)}
+      className="h-10 px-2"
+      style={{ color: "#000" }}
+    >
+      <Picker.Item label="Total" value="Total" />
+      <Picker.Item label="Containers" value="Containers" />
+      <Picker.Item label="Organics" value="Organics" />
+      <Picker.Item label="Landfill" value="Landfill" />
+      <Picker.Item label="Paper" value="Paper" />
+    </Picker>
+  </View>
+</View>
 
-              <View className="flex items-center justify-center w-full mt-2 mb-4">
+              <View className="flex items-center justify-center w-full">
                 <LineChart
-                  data={chartData}
+                  data={{
+                    labels: chartData.labels,
+                    datasets: [{
+                      data: chartData.datasets[0].data
+                    }]
+                  }}
                   width={screenWidth * 0.85}
                   height={220}
                   yAxisLabel=""
@@ -307,7 +466,9 @@ export default function TrashCanPage() {
                       r: '4',
                       strokeWidth: '2',
                       stroke: '#ffa726'
-                    }
+                    },
+                    formatYLabel: (value) => Math.max(0, Math.round(Number(value) || 0)).toString(),
+                    formatXLabel: (value) => value?.toString() || '0',
                   }}
                   bezier
                   style={{
@@ -316,22 +477,9 @@ export default function TrashCanPage() {
                   }}
                   withInnerLines={false}
                   withOuterLines={true}
+                  fromZero={true}
+                  segments={4}
                 />
-              </View>
-
-              {/* Waste type selector - moved below graph with wider buttons */}
-              <View className="flex-row flex-wrap justify-center gap-2">
-                {(['Total', 'Containers', 'Organics', 'Landfill', 'Paper'] as const).map((type) => (
-                  <Button
-                    key={type}
-                    onPress={() => setSelectedWaste(type)}
-                    className={`px-2 py-1 w-[100px] ${
-                      selectedWaste === type ? 'bg-ucd-gold' : 'bg-gray-200'
-                    }`}
-                  >
-                    {type}
-                  </Button>
-                ))}
               </View>
             </CardContent>
           </ModularCard>

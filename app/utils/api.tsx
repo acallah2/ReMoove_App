@@ -5,6 +5,7 @@ export const API_ENDPOINTS = {
     "https://m4t7u6yuzg.execute-api.us-east-2.amazonaws.com/Dev/ManualControls",
   status: "https://m4t7u6yuzg.execute-api.us-east-2.amazonaws.com/Dev/status",
   home: "https://m4t7u6yuzg.execute-api.us-east-2.amazonaws.com/Dev/Home",
+  chart: "https://m4t7u6yuzg.execute-api.us-east-2.amazonaws.com/Dev/TrashCount",
   // Add other endpoints if needed
 };
 
@@ -100,4 +101,43 @@ export const connectTrashCan = (
   };
 
   return ws;
+};
+
+/**
+ * Fetches chart data for a specific trash can.
+ * @param trashCanId - The ID of the trash can to fetch chart data for.
+ * @returns The chart data containing counts for different time ranges.
+ */
+export const fetchChartData = async (trashCanId: string) => {
+  console.log("Sending request to:", API_ENDPOINTS.chart);
+  console.log("With payload:", { trashCanId });
+  
+  try {
+    const response = await axios.post(
+      API_ENDPOINTS.chart, 
+      { trashCanId },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }
+    );
+    
+    // Handle both direct response and Lambda proxy response formats
+    const data = response.data.body ? JSON.parse(response.data.body) : response.data;
+    console.log("Chart data response:", data);
+    return data;
+  } catch (error: any) {
+    // Log the full error details
+    console.error("Chart data fetch error details:", {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+      headers: error.response?.headers
+    });
+    
+    throw new Error(error.response?.data?.message || "Failed to fetch chart data");
+  }
 };
