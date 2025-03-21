@@ -68,6 +68,14 @@ const getDayLabels = (dataPoints: number): string[] => {
   return labels;
 };
 
+// Add this mapping near the top of your file with other constants
+const categoryMapping = {
+  1: 'plastic_glass',
+  2: 'compost',
+  3: 'landfill',
+  4: 'paper'
+} as const;
+
 export default function TrashCanPage() {
   const { id } = useLocalSearchParams();
   // Ensure we always work with a string trash can id or fallback to an empty string.
@@ -361,40 +369,25 @@ const emptyCategory = (category: keyof typeof status.fillLevels) => {
           <ModularCard className="mb-4">
             <CardContent>
               <View className="border-b border-gray-200 pb-4 mb-6">
-                <Text className="text-lg font-semibold">Manual Controls</Text>
+                <Text className="text-lg font-semibold">Manual Sort</Text>
               </View>
-              {/* First Row */}
-              <View className="flex-row justify-between mt-2">
-                <Button onPress={() => sendManualControl({ forceSort: true })} className="w-[48%]">
-                  Force Sort
-                </Button>
-                <Button
-                  onPress={() => {
-                    if (status.sortingStatus === "Idle") {
-                      sendManualControl({ openTrap: status.trapStatus === "Closed" });
-                    } else {
-                      setShowGantryWaitMessage(true);
-                      setTimeout(() => setShowGantryWaitMessage(false), 3000);
-                    }
-                  }}
-                  className="w-[48%]"
-                >
-                  {status.trapStatus === "Closed" ? "Open Trap" : "Close Trap"}
-                </Button>
-              </View>
-
               {/* Bin Position Controls */}
               <View className="flex-row flex-wrap justify-between mt-2">
                 {[1, 2, 3, 4].map((bin) => (
-                  <Button key={bin} onPress={() => sendManualControl({ moveGantry: bin })} className="w-[23%] mb-2">
+                  <Button 
+                    key={bin} 
+                    onPress={() => {
+                      const message = {
+                        trashCanId,
+                        category: categoryMapping[bin as keyof typeof categoryMapping]
+                      };
+                      sendManualControl(message);
+                    }} 
+                    className="w-[23%] mb-2"
+                  >
                     {`Bin ${bin}`}
                   </Button>
                 ))}
-                <View className="w-full flex items-center">
-                  <Button onPress={() => sendManualControl({ moveGantry: 5 })} className="w-[100%]">
-                    Home
-                  </Button>
-                </View>
               </View>
             </CardContent>
           </ModularCard>
