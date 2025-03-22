@@ -1,50 +1,123 @@
-# Welcome to your Expo app 👋
+# ReMoove - Smart Waste Management App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile application built with Expo/React Native for monitoring and controlling automated waste sorting systems.
 
-## Get started
+## Overview
 
-1. Install dependencies
+ReMoove provides a comprehensive interface for managing smart trash cans, featuring real-time monitoring, manual controls, and usage analytics.
 
+### Key Features
+
+- Real-time trash can monitoring
+- Fill level tracking for multiple waste categories
+- Interactive sorting history graphs
+- Manual sorting controls
+- Alert system for maintenance and issues
+- WebSocket integration for live updates
+
+## Technology Stack
+
+- **Frontend Framework**: Expo/React Native
+- **Navigation**: Expo Router (file-based routing)
+- **Styling**: NativeWind (TailwindCSS)
+- **State Management**: React Hooks
+- **Data Visualization**: react-native-chart-kit
+- **API Integration**: Axios
+- **Real-time Updates**: WebSocket
+- **Storage**: AsyncStorage
+
+## Prerequisites
+
+- Node.js (v14 or later)
+- npm or yarn
+- Expo CLI
+- iOS Simulator (for iOS development)
+- Android Studio (for Android development)
+
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone [repository-url]
+   cd ReMoove_App
+   ```
+
+2. Install dependencies:
    ```bash
    npm install
    ```
 
-2. Start the app
-
+3. Start the development server:
    ```bash
-    npx expo start
+   npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+## Development
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Project Structure
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+ReMoove_App/
+├── app/
+│   ├── (tabs)/
+│   │   ├── home/
+│   │   ├── alerts/
+│   │   └── settings/
+│   └── utils/
+├── components/
+├── assets/
+└── constants/
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Key Components
 
-## Learn more
+- `home/`: Main dashboard and trash can list
+- `alerts/`: Real-time notifications and alerts
+- `settings/`: App configuration and user preferences
+- `utils/api.tsx`: API integration and WebSocket handling
 
-To learn more about developing your project with Expo, look at the following resources:
+## API Integration
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+The app connects to several AWS API Gateway endpoints:
 
-## Join the community
+- Status updates
+- Manual controls
+- Historical data
+- Alert management
 
-Join our community of developers creating universal apps.
+## Customization
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Theme Configuration
+
+The app uses a custom theme defined in `tailwind.config.js`, featuring UC Davis brand colors:
+
+- UC Davis Blue (`#022851`)
+- UC Davis Gold (`#FDB927`)
+- Supporting colors for status indicators
+
+## Building for Production
+
+1. Configure app.json:
+   ```json
+   {
+     "expo": {
+       "name": "ReMoove",
+       "slug": "ReMoove",
+       "version": "1.0.0"
+     }
+   }
+   ```
+
+2. Build for platforms:
+   ```bash
+   eas build --platform ios
+   eas build --platform android
+   ```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit changes
+4. Push to the branch
+5. Open a Pull Request
